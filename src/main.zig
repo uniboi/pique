@@ -2,6 +2,7 @@ const std = @import("std");
 
 const Instruction = @import("instruction.zig").Instruction;
 const VirtualMachine = @import("VirtualMachine.zig");
+const Lexer = @import("Lexer.zig");
 
 pub fn main() !void {
     const ins_main: []const Instruction = &.{
@@ -33,4 +34,14 @@ pub fn main() !void {
     const res = try vm.execute(0, 2);
 
     std.debug.print("vm completed with result: {}\n", .{res});
+
+    var lexer: Lexer = .{ .source = 
+    \\ fn guh() {
+    \\ let x = -99;
+    \\ }
+    };
+
+    while (try lexer.next()) |token| {
+        std.debug.print("{}\n", .{token});
+    }
 }
