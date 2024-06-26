@@ -73,10 +73,6 @@ fn isDigit(c: u8) bool {
     return c >= '0' and c <= '9';
 }
 
-fn isSign(c: u8) bool {
-    return c == '-' or c == '+';
-}
-
 fn isAllowedInIdentifier(c: u8) bool {
     return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or c == '_' or isDigit(c);
 }
@@ -100,14 +96,10 @@ fn identifier(lexer: *Lexer) Token {
 
 /// Asserts that the first character is a digit or '-'
 fn number(lexer: *Lexer) Error!Token {
-    std.debug.assert(isDigit(lexer.current()) or isSign(lexer.current()));
+    std.debug.assert(isDigit(lexer.current()) or lexer.current() == '-');
 
-    const is_negative = lexer.current() == '-';
+    const is_signed = lexer.current() == '-';
     var is_float = false;
-
-    if (lexer.current() == '+') {
-        lexer.position += 1;
-    }
 
     const start_pos = lexer.position;
     lexer.position += 1;
@@ -129,7 +121,7 @@ fn number(lexer: *Lexer) Error!Token {
         };
     }
 
-    return if (is_negative) .{
+    return if (is_signed) .{
         .integer = try std.fmt.parseInt(primitive.Integer, number_identifier, 10),
     } else .{
         .natural_number = try std.fmt.parseInt(primitive.IntegerU, number_identifier, 10),
@@ -162,10 +154,10 @@ pub fn next(lexer: *Lexer) Error!?Token {
         '<' => .{ .angled_bracket_open = {} },
         '>' => .{ .angled_bracket_close = {} },
         '=' => .{ .assign = {} },
+        '+' => .{ .add = {} },
         '*' => .{ .multiply = {} },
         '/' => .{ .divide = {} },
 
-        '+' => .{ .add = {} },
         '-' => sub: {
             const following = lexer.peek();
             break :sub if (following != null and isDigit(following.?)) try lexer.number() else .{ .subtract = {} };
